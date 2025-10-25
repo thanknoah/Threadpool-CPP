@@ -104,10 +104,10 @@ int main() {
     t.init();
 
 
-    auto calculation = t.executeTaskInThreadPool(add, 1, 2); 
+    auto calculation = t.executeTaskInThreadPool(add, 1, 2);
+    std::cout << "Non blocking\n"; 
     auto calculation2 = t.executeTaskInThreadPool(add, 3, 5);
     auto calculation3 = t.executeTaskInThreadPool(add, 5, 6);
-    std::cout << "Non blocking\n"; 
     std::cout << calculation.get() << "\n";
     std::cout << calculation2.get() << "\n";
     std::cout << calculation3.get() << "\n";
