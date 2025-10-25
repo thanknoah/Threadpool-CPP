@@ -9,8 +9,6 @@
 #include <chrono>
 #include <utility>
 #include <future>
-#include <random>
-#include <variant>
 
 class threadPool {
 private:
@@ -21,16 +19,11 @@ private:
     std::unordered_map<int, std::shared_ptr<info>> threadInformation; // never changes size so no need for mutex
     std::vector<std::thread> threadList;
     std::atomic<int> optimalThread;
-    std::atomic<bool> stopThread;
 
     void internalThreadOperation(std::shared_ptr<info>& e) {
         while (true) {
-            if (e->taskQuene.empty() && !stopThread.load()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                continue;
-            }
-            else if (e->taskQuene.empty() && stopThread.load()) {
-                break;
+            if (e->taskQuene.empty()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10)); continue;
             }
 
             std::function<void()> task;
@@ -47,9 +40,6 @@ private:
 
     void findLeastExhaustedWorker() {
         while (true) {
-            if (stopThread.load())
-                break;
-
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             int smallestNum = 0;
             int smallestWorkerSize = 0;
@@ -69,7 +59,6 @@ private:
 
 public:
     ~threadPool() {
-        stopThread.store(true);
         for (auto& thread : threadList) {
             if (thread.joinable()) {
                 thread.join();
@@ -78,7 +67,6 @@ public:
     }
 
     void init() {
-        stopThread = false;
         for (int x = 0; x < std::thread::hardware_concurrency(); ++x) {
             auto internalThreadDetails = std::make_shared<info>();
             std::thread t(std::bind(&threadPool::internalThreadOperation, this, internalThreadDetails));
@@ -110,7 +98,7 @@ int add(int a, int b) {
     return a + b;
 }
 
-// testing
+// demo
 int main() {
     threadPool t;
     t.init();
@@ -124,4 +112,3 @@ int main() {
     std::cout << calculation2.get() << "\n";
     std::cout << calculation3.get() << "\n";
 }
-
